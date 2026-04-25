@@ -140,7 +140,7 @@ def contar_eliminados_modificados(archivos_old, archivos_new, data, baseline):
             if arch_new == arch_old: 
                 igual = True
                 if data["archivos"][arch_old] != baseline["archivos"][arch_new]:
-                    modificados.append((arch_old, arch_new))
+                    modificados.append((arch_old,data["archivos"][arch_old], arch_new), baseline["archivos"][arch_new])
                 break
         if not igual:
             eliminados.append(arch_old)
@@ -149,7 +149,7 @@ def contar_eliminados_modificados(archivos_old, archivos_new, data, baseline):
         state = -1
         print("Hay archivos modificados | Se sugiere revisarlos y decidir si hacer o no un baseline actualizado")
         for idx, value in enumerate(modificados):
-            print(f"{idx+1}. Viejo: {value[0]} | Nuevo: {value[-1]}")
+            print(f"{idx+1}. Viejo: {value[0]} - Hash: {value[1]} | Nuevo: {value[2]} - Hash: {value[3]}")
     
     if len(eliminados) != 0:
         state = -1
