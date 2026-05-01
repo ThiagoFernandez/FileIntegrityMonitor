@@ -25,7 +25,7 @@ Proyecto de la Fase 1 del roadmap de Python para ciberseguridad — el mismo mec
 ## Instalación
 
 ```bash
-git clone https://github.com/tu-usuario/fileIntegrityMonitor.git
+git clone https://github.com/ThiagoFernandez/FileIntegrityMonitor.git
 cd fileIntegrityMonitor
 python main.py
 ```
