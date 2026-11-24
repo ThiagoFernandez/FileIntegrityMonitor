@@ -196,32 +196,13 @@ def contar_eliminados_modificados(archivos_old, archivos_new, data, baseline):
     eliminados = []
     modificados = []
 
-<<<<<<< HEAD
-    return state, eliminados
-
-def contar_renombre(eliminados, nuevos, data, baseline):
-    posible_renombre = []
-    state = 0
-    for elim in eliminados:
-        for nue in nuevos:
-            if data["archivos"][elim] == baseline["archivos"][nue]:
-                posible_renombre.append((elim, nue))
-    
-    if len(posible_renombre)!=0:
-        state = -1
-        print("Hay archivos que pueden ser que hayan sido renombrados | Se sugiere revisarlos y decidir si hacer o no un baseline actualizado")
-        for idx, value in enumerate(posible_renombre):
-            print(f"{idx+1}. {value}")
-    
-    return state
-=======
     for old in archivos_old:
         if old not in archivos_new:
             eliminados.append(old)
         else:
             if data["archivos"][old] != baseline["archivos"][old]:
                 modificados.append((old, data["archivos"][old], baseline["archivos"][old]))
->>>>>>> 51c19ee (Finished)
+
 
     if modificados:
         print("\nArchivos modificados:")
@@ -318,22 +299,10 @@ def comparar_baselines(data, baseline, directorio):
     archivos_old = list(data["archivos"].keys())
     archivos_new = list(baseline["archivos"].keys())
 
-<<<<<<< HEAD
-    state1, eliminados= contar_eliminados_modificados(archivos_old, archivos_new, data, baseline)
-    state2, nuevos = contar_nuevos(archivos_old, archivos_new)
-    state3 = contar_renombre(eliminados, nuevos, data, baseline)
-    if state1 == -1:
-        all_good = False
-    if state2 == -1:
-        all_good = False
-    if state3 == -1:
-        all_good = False
-    return all_good
-=======
+
     modificados, eliminados = contar_eliminados_modificados(
         archivos_old, archivos_new, data, baseline
     )
->>>>>>> 51c19ee (Finished)
 
     nuevos = contar_nuevos(archivos_old, archivos_new)
 
