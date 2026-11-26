@@ -9,9 +9,11 @@ Proyecto de la Fase 1 del roadmap de Python para ciberseguridad — el mismo mec
 ## Features
 
 - **Tres modos de operación:** `Crear`, `Verificar`, `Watch`
-- **Detección de cuatro tipos de cambio:** modificados, eliminados, nuevos, renombrados
-- **Detección de renombres con score de confianza** (ALTA/MEDIA/BAJA) basado en nombre, extensión, directorio y tamaño
+- **Detección de cinco tipos de cambio:** modificados, eliminados, nuevos, renombrados y sin acceso (el archivo existe pero ya no se puede leer)
+- **Detección de renombres con score de confianza** (ALTA/MEDIA/BAJA) basado en directorio, nombre, extensión y unicidad del hash, con emparejamiento 1 a 1
 - **Resolución automática de renombres** — actualiza el baseline con los renombres confirmados
+- **Symlinks sin seguir** — se vigila hacia dónde apunta el link, no el contenido del destino
+- **Guardado atómico** del baseline (no queda un JSON cortado si algo falla)
 - **Multithreading** adaptativo — workers según CPU disponibles
 - **Barra de progreso** en tiempo real durante el hashing
 - **Alertas con nivel de severidad** — HIGH / MEDIUM / LOW / INFO
@@ -26,7 +28,7 @@ Proyecto de la Fase 1 del roadmap de Python para ciberseguridad — el mismo mec
 
 ```bash
 git clone https://github.com/ThiagoFernandez/FileIntegrityMonitor.git
-cd fileIntegrityMonitor
+cd FileIntegrityMonitor
 python main.py
 ```
 
@@ -64,9 +66,9 @@ Recalcula los hashes del directorio y compara contra el baseline guardado. Repor
 
 ### Watch
 
-Monitoreo continuo cada N segundos.
+Monitoreo continuo cada N segundos. No pide confirmaciones (la resolución de renombres es solo para Verificar), y Ctrl+C vuelve al menú en cualquier momento.
 
-**Soft** (default): el baseline de referencia no cambia — todos los cambios se siguen reportando en cada ciclo hasta que recreés el baseline manualmente.
+**Soft** (default, Enter): el baseline de referencia no cambia — todos los cambios se siguen reportando en cada ciclo hasta que recreés el baseline manualmente.
 
 **Aggressive**: el baseline se actualiza con cada ciclo — solo alerta sobre cambios nuevos desde la última verificación.
 
@@ -95,14 +97,19 @@ NEW (1):
 
 RENAMED (1):
  - [ALTA] /home/usuario/proyecto/old_name.py → /home/usuario/proyecto/new_name.py
+
+SIN ACCESO (1):
+ - /home/usuario/proyecto/secreto.key
 ```
+
+Los renombres se descuentan de DELETED y NEW: un archivo renombrado aparece solo en RENAMED.
 
 ### Niveles de severidad
 
 | Nivel | Condición |
 |-------|-----------|
 | HIGH | Hay archivos modificados o eliminados |
-| MEDIUM | Solo archivos nuevos |
+| MEDIUM | Archivos nuevos o sin acceso |
 | LOW | Solo posibles renombres |
 | INFO | Sin cambios relevantes |
 
@@ -120,7 +127,8 @@ RENAMED (1):
     "archivos": {
         "/home/usuario/proyecto/main.py": "b94d27b9934d3e08...",
         "/home/usuario/proyecto/config.py": "1a3db2c45f8e92a1..."
-    }
+    },
+    "sin_acceso": []
 }
 ```
 
@@ -146,12 +154,14 @@ Un renombre se detecta cuando un archivo desaparece y aparece uno nuevo con el m
 | Criterio | Puntos |
 |----------|--------|
 | Hash igual (base) | +50 |
-| Mismo nombre de archivo | +30 |
+| Mismo directorio (renombrado) o mismo nombre en otro directorio (movido) | +30 |
 | Misma extensión | +10 |
-| Mismo directorio padre | +5 |
-| Mismo tamaño | +5 |
+| El hash es único entre eliminados y nuevos | +10 |
+| El hash se repite (ej. archivos vacíos o copias) | −20 |
 
-Score ≥ 80 → ALTA (resolución automática disponible)
+El tamaño no se usa: mismo hash implica mismo tamaño. Los candidatos se emparejan 1 a 1 de mayor a menor score, así que cada archivo participa en un solo renombre.
+
+Score ≥ 80 → ALTA (la resolución automática los aplica al baseline)
 Score ≥ 60 → MEDIA
 Score < 60 → BAJA
 
